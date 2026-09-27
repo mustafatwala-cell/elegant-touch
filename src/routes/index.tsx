@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, MessageCircle, ShieldCheck, Truck } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
+import { JewelryMasonry } from "@/components/product/jewelry-masonry";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ function Home() {
   const [sort, setSort] = useState<"default" | "low" | "high">("default");
 
   const featured = products.filter((p) => p.featured);
+  const jewelry = products.filter((p) => p.cat === "jewellery");
 
   const list = useMemo(() => {
     let next = activeCat === "all" ? [...products] : products.filter((p) => p.cat === activeCat);
@@ -95,6 +97,19 @@ function Home() {
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
+      </section>
+
+      <section id="gallery" aria-labelledby="gallery-title" className="mx-auto max-w-6xl px-5 pb-16">
+        <div className="mb-8 max-w-xl">
+          <p className="text-sm text-rose">معرض المجوهرات</p>
+          <h2 id="gallery-title" className="mt-1 text-3xl font-semibold">
+            كل قطعة بتحكي حكاية
+          </h2>
+          <p className="mt-2 text-sm leading-7 text-muted">
+            خواتم، قلادات، أقراط وأساور — اضغطي على أي قطعة لتفاصيلها ومقاسها.
+          </p>
+        </div>
+        <JewelryMasonry items={jewelry} />
       </section>
 
       <section className="mx-auto grid max-w-6xl grid-cols-2 gap-3 px-5 pb-6 md:grid-cols-4 md:gap-4">
