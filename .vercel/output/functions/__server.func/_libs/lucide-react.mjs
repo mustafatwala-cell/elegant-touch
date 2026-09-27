@@ -95,6 +95,19 @@ var ArrowLeft = createLucideIcon("arrow-left", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ArrowUpLeft = createLucideIcon("arrow-up-left", [["path", {
+	d: "M7 17V7h10",
+	key: "11bw93"
+}], ["path", {
+	d: "M17 17 7 7",
+	key: "2786uv"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Heart = createLucideIcon("heart", [["path", {
 	d: "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z",
 	key: "c3ymky"
@@ -357,4 +370,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Star as a, Share2 as c, Minus as d, MessageCircle as f, ArrowLeft as h, Sun as i, Plus as l, Heart as m, Truck as n, ShoppingBag as o, Menu as p, TriangleAlert as r, ShieldCheck as s, X as t, Moon as u };
+export { Star as a, Share2 as c, Minus as d, MessageCircle as f, ArrowLeft as g, ArrowUpLeft as h, Sun as i, Plus as l, Heart as m, Truck as n, ShoppingBag as o, Menu as p, TriangleAlert as r, ShieldCheck as s, X as t, Moon as u };
