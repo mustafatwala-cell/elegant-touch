@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elegant Touch | إكسسوارات، مجوهرات وهدايا فاخرة</title>
+<meta name="description" content="Elegant Touch - إكسسوارات، مجوهرات، حقائب وهدايا مختارة بعناية مع طلب سريع عبر واتساب.">
+<meta name="theme-color" content="#b3355a">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rose:#b3355a; --rose-dark:#8f2646; --blush:#fdf1f0; --cream:#fffaf7;
+    --ink:#221f1d; --muted:#8a8078; --line:#f0e2df;
+    --card-bg:#ffffff; --text-on-dark:#ffffff; --text-on-card:#221f1d;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:'Tajawal',sans-serif; color:var(--ink); background:var(--cream); transition:background .3s,color .3s;}
+
+  /* ===== Hero Text - Always visible ===== */
+  .hero-text-title, .hero-text-desc { color: #ffffff !important; text-shadow: 0 2px 12px rgba(0,0,0,.5); }
+  .hero-text-tag { color: #f3c9d4 !important; text-shadow: 0 2px 8px rgba(0,0,0,.4); }
+
+  /* ===== Product Card - Dynamic & always readable ===== */
+  .product-card {
+    background: var(--card-bg);
+    color: var(--text-on-card);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: transform .3s, box-shadow .3s;
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,.1); }
+  .product-card .card-img { aspect-ratio: 3/4; overflow: hidden; position: relative; background: var(--blush); }
+  .product-card .card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+  .product-card:hover .card-img img { transform: scale(1.07); }
+  .product-card .card-body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .product-card .card-name { font-size: 15px; font-weight: 500; line-height: 1.4; }
+  .product-card .card-price { font-size: 16px; font-weight: 700; color: var(--rose); margin-top: 2px; }
+  .product-card .card-btn {
+    margin-top: auto;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 13px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    transition: background .2s, color .2s;
+  }
+  .product-card .card-btn:hover { background: var(--rose); }
+
+  /* Dark mode overrides for card button */
+  body.dark .product-card .card-btn { background: var(--rose); color: #ffffff !important; }
+  body.dark .product-card .card-btn:hover { background: var(--rose-dark); }
+
+  .tile{aspect-ratio:3/4; overflow:hidden; position:relative;}
+  .tile img{width:100%;height:100%;object-fit:cover; transition:transform .5s ease;}
+  .tile:hover img{transform:scale(1.05);}
+  .tab-btn{border-bottom:2px solid transparent; color: var(--ink);}
+  .tab-btn.active{border-color:var(--rose); color:var(--rose);}
+  .cart-drawer{transition:transform .35s cubic-bezier(.4,0,.2,1);}
+  #toast{transition:opacity .3s ease, transform .3s ease;}
+  .size-btn{border:1px solid var(--line); min-width:44px;}
+  .size-btn.selected{border-color:var(--rose); background:var(--rose); color:#fff;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+
+  .search-wrap{position:relative;max-width:520px;margin:0 auto;}
+  .search-wrap input{width:100%;border:1px solid var(--line);background:var(--card-bg);border-radius:999px;padding:13px 46px 13px 18px;outline:none;transition:.2s;color:var(--ink);}
+  .search-wrap input:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(179,53,90,.08);}
+  .search-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--muted);}
+  .sort-select,.price-filter{border:1px solid var(--line);background:var(--card-bg);border-radius:999px;padding:10px 14px;outline:none;color:var(--ink);}
+
+  .fav-btn{position:absolute;top:10px;left:10px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,.08);font-size:18px;line-height:1;border:none;cursor:pointer;}
+  .fav-btn.active{color:var(--rose);}
+  .empty-state{grid-column:1/-1;text-align:center;padding:45px 15px;color:var(--muted);}
+  .info-modal{transition:opacity .2s ease;}
+  .info-modal .info-box{max-height:88vh;overflow:auto;}
+  .form-input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 13px;outline:none;background:var(--card-bg);color:var(--ink);}
+  .form-input:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(179,53,90,.08);}
+  .field-label{font-size:13px;font-weight:700;margin-bottom:6px;display:block;color:var(--ink);}
+
+  @media(max-width:640px){.sort-select,.price-filter{width:100%;}.search-wrap{max-width:none;}}
+
+  /* ===== Dark Mode - محسّن بالكامل ===== */
+  body.dark{
+    --cream:#1a1816; --ink:#f5f0ed; --blush:#2a2523; --line:#3a3330;
+    --muted:#a89f98; --card-bg:#221f1d; --text-on-card:#f5f0ed;
+    --rose:#e06b8b; --rose-dark:#c14b6f;
+  }
+  body.dark nav, body.dark #cart-sidebar, body.dark footer{background:#221f1d !important; border-color:#3a3330 !important;}
+  body.dark .bg-white{background:#221f1d !important; color:#f5f0ed;}
+  body.dark #product-modal .modal-box, body.dark #checkout-modal .info-box, body.dark #info-modal .info-box{background:#221f1d !important; color:#f5f0ed;}
+  body.dark section[style*="background:#fff"], body.dark section[style*="background: #fff"]{background:#221f1d !important;}
+  body.dark #about{background:#221f1d !important;}
+  body.dark img{filter:brightness(.92);}
+
+  /* Trust badges dark fix */
+  body.dark section[style*="background:var(--ink)"] { background: #000 !important; color: #f5f0ed !important; }
+  body.dark section[style*="background:var(--ink)"] * { color: #f5f0ed !important; }
+
+  /* Buttons that use var(--ink) background — keep white text */
+  body.dark .btn-ink { background: var(--rose) !important; color: #fff !important; }
+
+  /* WhatsApp Float */
+  .whatsapp-float{position:fixed;bottom:20px;left:20px;z-index:55;display:flex;align-items:center;gap:8px;background:#25D366;color:#fff;padding:12px 20px;border-radius:999px;font-weight:700;font-size:14px;box-shadow:0 8px 24px rgba(37,211,102,.4);transition:transform .25s,box-shadow .25s;text-decoration:none;}
+  .whatsapp-float:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(37,211,102,.55);}
+  @media(max-width:640px){.whatsapp-float span{display:none}.whatsapp-float{padding:14px;border-radius:50%}}
+
+  /* ===== Dynamic Grid (Responsive Auto-fit) ===== */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+  }
+  @media (max-width: 480px) {
+    .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  }
+
+  /* ===== List View (تحت بعض) ===== */
+  .products-list { display: flex; flex-direction: column; gap: 14px; }
+  .products-list .product-card { flex-direction: row; align-items: stretch; }
+  .products-list .product-card .card-img { width: 140px; min-width: 140px; aspect-ratio: 1/1; }
+  .products-list .product-card .card-body { padding: 12px 16px; justify-content: center; }
+  @media (max-width: 480px) {
+    .products-list .product-card .card-img { width: 110px; min-width: 110px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top promo bar -->
+<div class="text-center text-xs sm:text-sm py-2 text-white" style="background:var(--rose-dark);">
+  توصيل لجميع المحافظات · اطلبي الآن مباشرة عبر واتساب
+</div>
+
+<!-- Nav -->
+<nav class="sticky top-0 z-40" style="background:var(--card-bg); border-bottom:1px solid var(--line);">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between h-[68px]">
+    <button onclick="toggleMenu()" class="md:hidden p-1" aria-label="القائمة">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <h1 class="text-2xl font-extrabold tracking-tight" style="color:var(--rose);">Elegant Touch</h1>
+    <div id="nav-links" class="hidden md:flex gap-8 text-sm font-medium">
+      <a href="#" onclick="event.preventDefault();filterCategory('all')" class="cat-nav hover:text-[color:var(--rose)]">الكل</a>
+      <a href="#" onclick="event.preventDefault();filterCategory('bags')" class="cat-nav hover:text-[color:var(--rose)]">حقائب</a>
+      <a href="#" onclick="event.preventDefault();filterCategory('jewellery')" class="cat-nav hover:text-[color:var(--rose)]">مجوهرات</a>
+      <a href="#" onclick="event.preventDefault();filterCategory('accessories')" class="cat-nav hover:text-[color:var(--rose)]">إكسسوارات</a>
+      <a href="#" onclick="event.preventDefault();filterCategory('gifts')" class="cat-nav hover:text-[color:var(--rose)]">هدايا</a>
+      <a href="#about" class="cat-nav hover:text-[color:var(--rose)]">من نحن</a>
+    </div>
+    <div class="flex items-center gap-1">
+      <button onclick="toggleDark()" class="p-2" aria-label="الوضع الليلي" title="الوضع الليلي">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+      </button>
+      <!-- ✅ تم إصلاح الرابط -->
+      <a href="favourites.html" class="relative p-2" aria-label="المفضلة" title="المفضلة">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        <span id="fav-count" class="absolute -top-1 -left-1 text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center text-white hidden" style="background:var(--rose);">0</span>
+      </a>
+      <button onclick="toggleCart()" class="relative p-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        <span id="cart-count" class="absolute -top-1 -left-1 text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center text-white" style="background:var(--rose);">0</span>
+      </button>
+    </div>
+  </div>
+  <div id="mobile-menu" class="hidden md:hidden flex flex-col text-sm font-medium px-5 pb-4 gap-3">
+    <a href="#" onclick="event.preventDefault();filterCategory('all')">الكل</a>
+    <a href="#" onclick="event.preventDefault();filterCategory('bags')">حقائب</a>
+    <a href="#" onclick="event.preventDefault();filterCategory('jewellery')">مجوهرات</a>
+    <a href="#" onclick="event.preventDefault();filterCategory('accessories')">إكسسوارات</a>
+    <a href="#" onclick="event.preventDefault();filterCategory('gifts')">هدايا</a>
+    <a href="#about">من نحن</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="relative">
+  <img src="https://images.unsplash.com/photo-1602173574767-37ac01994b2a?auto=format&fit=crop&w=1600&q=75" onerror="this.onerror=null;this.src=window.FALLBACK_IMG" alt="Elegant Touch - مجوهرات وإكسسوارات" class="w-full h-[420px] md:h-[520px] object-cover">
+  <div class="absolute inset-0 flex items-center" style="background:linear-gradient(90deg, rgba(34,31,29,.82), rgba(34,31,29,.25));">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 w-full">
+      <div class="max-w-md">
+        <p class="text-sm mb-2 hero-text-tag">Chic Bags & Statement Accessories 💕✨</p>
+        <h2 class="text-4xl md:text-5xl font-extrabold leading-tight hero-text-title">Upgrade your style effortlessly ✨</h2>
+        <p class="mt-4 hero-text-desc">خط جديد من المجوهرات Stainless Steel و Gold Plated — حقائب وإكسسوارات مختارة بعناية لإطلالتك اليومية.</p>
+        <a href="#products" class="inline-block mt-7 py-3 px-8 text-sm font-bold rounded-full" style="background:var(--rose); color:#fff;">تسوقي الآن</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Trust badges -->
+<section class="py-6" style="background:var(--ink);">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-sm" style="color:#f5f0ed;">
+    <div class="flex items-center justify-center gap-2">✅ <span>عربون 50% لتأكيد الطلب</span></div>
+    <div class="flex items-center justify-center gap-2">🇪🇬 <span>الشحن متاح لجميع محافظات مصر</span></div>
+    <div class="flex items-center justify-center gap-2">💎 <span>خط جديد: Stainless Steel &amp; Gold Plated</span></div>
+  </div>
+</section>
+
+<!-- Category tiles -->
+<section class="max-w-7xl mx-auto px-5 lg:px-8 py-14">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="tile rounded-lg cursor-pointer" onclick="event.preventDefault();filterCategory('bags')">
+      <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80" onerror="this.onerror=null;this.src=window.FALLBACK_IMG" alt="حقائب">
+      <span class="absolute bottom-3 right-3 text-white font-bold bg-black/40 px-3 py-1 rounded-full text-sm">حقائب</span>
+    </div>
+    <div class="tile rounded-lg cursor-pointer" onclick="event.preventDefault();filterCategory('jewellery')">
+      <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=80" onerror="this.onerror=null;this.src=window.FALLBACK_IMG" alt="مجوهرات">
+      <span class="absolute bottom-3 right-3 text-white font-bold bg-black/40 px-3 py-1 rounded-full text-sm">مجوهرات</span>
+    </div>
+    <div class="tile rounded-lg cursor-pointer" onclick="event.preventDefault();filterCategory('accessories')">
+      <img src="https://images.unsplash.com/photo-1524592094714-0f0654ece975?auto=format&fit=crop&w=800&q=80" onerror="this.onerror=null;this.src=window.FALLBACK_IMG" alt="إكسسوارات">
+      <span class="absolute bottom-3 right-3 text-white font-bold bg-black/40 px-3 py-1 rounded-full text-sm">إكسسوارات</span>
+    </div>
+    <div class="tile rounded-lg cursor-pointer" onclick="event.preventDefault();filterCategory('gifts')">
+      <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=800&q=80" onerror="this.onerror=null;this.src=window.FALLBACK_IMG" alt="هدايا">
+      <span class="absolute bottom-3 right-3 text-white font-bold bg-black/40 px-3 py-1 rounded-full text-sm">هدايا</span>
+    </div>
+  </div>
+</section>
+
+<!-- Products -->
+<main id="products" class="max-w-7xl mx-auto px-5 lg:px-8 pb-16">
+  <div class="text-center mb-8">
+    <h3 class="text-3xl font-extrabold">تسوقي حسب القسم</h3>
+    <p class="mt-2" style="color:var(--muted);">اختاري القسم اللي يهمك</p>
+  </div>
+  <div class="search-wrap mb-5">
+    <span class="search-icon">⌕</span>
+    <input id="search-input" type="search" placeholder="ابحثي عن منتج..." oninput="handleSearch(this.value)" aria-label="البحث عن منتج">
+  </div>
+  <div class="flex justify-center gap-6 mb-5 text-sm font-semibold flex-wrap">
+    <button class="tab-btn active py-2" data-cat="all" onclick="event.preventDefault();filterCategory('all')">الكل</button>
+    <button class="tab-btn py-2" data-cat="bags" onclick="event.preventDefault();filterCategory('bags')">حقائب</button>
+    <button class="tab-btn py-2" data-cat="jewellery" onclick="event.preventDefault();filterCategory('jewellery')">مجوهرات</button>
+    <button class="tab-btn py-2" data-cat="accessories" onclick="event.preventDefault();filterCategory('accessories')">إكسسوارات</button>
+    <button class="tab-btn py-2" data-cat="gifts" onclick="event.preventDefault();filterCategory('gifts')">هدايا</button>
+  </div>
+  <div class="flex justify-between items-center gap-3 mb-8 flex-wrap">
+    <p id="results-count" class="text-sm" style="color:var(--muted);"></p>
+    <div class="flex gap-2 flex-wrap w-full sm:w-auto items-center">
+      <select id="price-filter" class="price-filter text-sm" onchange="setPriceFilter(this.value)" aria-label="فلتر السعر">
+        <option value="all">كل الأسعار</option>
+        <option value="0-250">أقل من 250 ج.م</option>
+        <option value="250-400">250 - 400 ج.م</option>
+        <option value="400-99999">أكثر من 400 ج.م</option>
+      </select>
+      <select id="sort-select" class="sort-select text-sm" onchange="setSort(this.value)" aria-label="ترتيب المنتجات">
+        <option value="default">ترتيب المنتجات</option>
+        <option value="low">السعر: من الأقل للأعلى</option>
+        <option value="high">السعر: من الأعلى للأقل</option>
+        <option value="name">الاسم: أ-ي</option>
+      </select>
+      <button id="view-toggle" class="view-toggle-btn" onclick="toggleView()" title="تبديل طريقة العرض">
+        <span id="view-icon">▦</span> <span id="view-label">شبكة</span>
+      </button>
+    </div>
+  </div>
+  <!-- ✅ الحاوية الديناميكية -->
+  <div id="product-grid" class="products-grid"></div>
+</main>
+
+<!-- WhatsApp CTA band -->
+<section class="py-12" style="background:var(--blush);">
+  <div class="max-w-3xl mx-auto text-center px-5">
+    <h3 class="text-2xl font-extrabold">عايزة تعرفي أحدث العروض؟</h3>
+    <p class="mt-2" style="color:var(--muted);">تابعينا وهنبعتلك أول بأول كل جديد وخصومات حصرية.</p>
+    <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
+      <a href="https://wa.me/201557637446" target="_blank" class="inline-flex items-center gap-2 py-3 px-6 rounded-full text-white font-bold text-sm" style="background:#2e7d5b;">واتساب</a>
+      <a href="https://www.facebook.com/share/19UngUaqoQ/" target="_blank" class="inline-flex items-center gap-2 py-3 px-6 rounded-full text-white font-bold text-sm" style="background:#1877F2;">فيسبوك</a>
+      <a href="https://www.instagram.com/elegant.touch33?stkn=MW12MXRjYnJvdXF5cA==" target="_blank" class="inline-flex items-center gap-2 py-3 px-6 rounded-full text-white font-bold text-sm" style="background:linear-gradient(45deg,#f58529,#dd2a7b,#8134af);">انستجرام</a>
+      <a href="https://www.tiktok.com/@elegant.touch22?_r=1&_t=ZS-9A19cxnYnNI" target="_blank" class="inline-flex items-center gap-2 py-3 px-6 rounded-full text-white font-bold text-sm" style="background:#111;">تيك توك</a>
+    </div>
+    <p class="mt-6 text-xs" style="color:var(--muted);">يُطلب عربون 50% لتأكيد الطلب · الشحن متاح لجميع محافظات مصر</p>
+  </div>
+</section>
+
+<!-- Cart Sidebar -->
+<div id="cart-sidebar" class="cart-drawer fixed inset-y-0 left-0 w-full sm:w-96 shadow-2xl -translate-x-full z-50 flex flex-col" style="background:var(--card-bg);">
+  <div class="p-5 flex justify-between items-center" style="border-bottom:1px solid var(--line);">
+    <h2 class="text-xl font-extrabold">سلة المشتريات</h2>
+    <button onclick="toggleCart()"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+  </div>
+  <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
+  <div class="p-5" style="border-top:1px solid var(--line);">
+    <div class="flex justify-between items-center mb-4">
+      <span class="font-medium">الإجمالي</span>
+      <span id="cart-total" class="text-xl font-bold" style="color:var(--rose);">0 ج.م</span>
+    </div>
+    <button onclick="checkoutWhatsApp()" class="w-full flex items-center justify-center gap-2 text-white font-bold py-3 rounded-full" style="background:#2e7d5b;">إتمام الطلب عبر واتساب</button>
+    <p class="text-center text-xs mt-3" style="color:var(--muted);">يُطلب عربون 50% لتأكيد الطلب · الشحن لجميع محافظات مصر</p>
+  </div>
+</div>
+<div id="cart-overlay" onclick="toggleCart()" class="fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition-opacity duration-300"></div>
+<div id="toast" class="fixed bottom-6 right-6 z-50 py-3 px-5 rounded-full text-sm font-medium opacity-0 pointer-events-none translate-y-2 text-white" style="background:var(--ink);"></div>
+
+<!-- About / policies -->
+<section id="about" class="py-14" style="background:var(--card-bg);">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="rounded-2xl p-6" style="background:var(--blush);">
+        <h3 class="text-xl font-extrabold mb-3">من نحن؟</h3>
+        <p class="text-sm leading-7" style="color:var(--muted);">Elegant Touch متجر يهتم بالإكسسوارات والمجوهرات والحقائب والهدايا المختارة بعناية، مع تجربة شراء بسيطة وسريعة عبر الموقع وواتساب.</p>
+      </div>
+      <div class="rounded-2xl p-6" style="background:var(--blush);">
+        <h3 class="text-xl font-extrabold mb-3">الشحن والتوصيل</h3>
+        <p class="text-sm leading-7" style="color:var(--muted);">الشحن متاح لجميع محافظات مصر. تكلفة الشحن ومدة التوصيل يتم تأكيدهما مع العميل قبل تثبيت الطلب، حسب المحافظة والمنطقة.</p>
+      </div>
+      <div class="rounded-2xl p-6" style="background:var(--blush);">
+        <h3 class="text-xl font-extrabold mb-3">الاستبدال والاسترجاع</h3>
+        <p class="text-sm leading-7" style="color:var(--muted);">للاستبدال أو وجود مشكلة في المنتج، تواصلي معنا عبر واتساب أولاً. تفاصيل المدة والحالات المقبولة يتم الاتفاق عليها قبل تنفيذ الطلب.</p>
+      </div>
+    </div>
+    <div class="mt-6 flex justify-center gap-3 flex-wrap">
+      <button onclick="openInfo('shipping')" class="py-2.5 px-5 rounded-full text-sm font-bold text-white" style="background:var(--ink);">تفاصيل الشحن</button>
+      <button onclick="openInfo('return')" class="py-2.5 px-5 rounded-full text-sm font-bold text-white" style="background:var(--rose);">سياسة الاستبدال</button>
+      <button onclick="openInfo('about')" class="py-2.5 px-5 rounded-full text-sm font-bold" style="background:var(--blush);color:var(--ink);">عن Elegant Touch</button>
+    </div>
+  </div>
+</section>
+
+<!-- Checkout modal -->
+<div id="checkout-modal" class="info-modal fixed inset-0 z-[80] hidden items-center justify-center p-4 opacity-0" style="background:rgba(34,31,29,.65);" onclick="if(event.target===this)closeCheckout()">
+  <div class="info-box rounded-2xl w-full max-w-lg p-6" style="background:var(--card-bg);color:var(--ink);">
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-xl font-extrabold">بيانات الطلب</h3>
+      <button onclick="closeCheckout()" class="text-xl" style="color:var(--muted);">✕</button>
+    </div>
+    <p class="text-sm mb-5" style="color:var(--muted);">اكتبي بياناتك حتى نرسل الطلب لواتساب بشكل منظم.</p>
+    <div class="grid gap-4">
+      <div><label class="field-label">الاسم *</label><input id="customer-name" class="form-input" placeholder="الاسم بالكامل"></div>
+      <div><label class="field-label">رقم الهاتف *</label><input id="customer-phone" class="form-input" inputmode="tel" placeholder="01xxxxxxxxx"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="field-label">المحافظة *</label><input id="customer-governorate" class="form-input" placeholder="مثال: القاهرة"></div>
+        <div><label class="field-label">المنطقة</label><input id="customer-area" class="form-input" placeholder="المنطقة"></div>
+      </div>
+      <div><label class="field-label">العنوان بالتفصيل *</label><textarea id="customer-address" class="form-input" rows="3" placeholder="الشارع، رقم العمارة، الدور..."></textarea></div>
+      <div><label class="field-label">ملاحظات إضافية</label><textarea id="customer-notes" class="form-input" rows="2" placeholder="لون، موعد مناسب، أو أي ملاحظة"></textarea></div>
+      <div class="rounded-xl p-4 text-sm" style="background:var(--blush);">
+        <div class="flex justify-between"><span>إجمالي المنتجات</span><strong id="checkout-total">0 ج.م</strong></div>
+        <div class="mt-2 text-xs" style="color:var(--muted);">العربون 50% لتأكيد الطلب حسب سياسة المتجر.</div>
+      </div>
+      <button onclick="sendCustomerOrder()" class="w-full py-3 rounded-full text-white font-bold" style="background:#2e7d5b;">إرسال الطلب عبر واتساب</button>
+    </div>
+  </div>
+</div>
+
+<!-- Info modal -->
+<div id="info-modal" class="info-modal fixed inset-0 z-[75] hidden items-center justify-center p-4 opacity-0" style="background:rgba(34,31,29,.65);" onclick="if(event.target===this)closeInfo()">
+  <div class="info-box rounded-2xl w-full max-w-2xl p-6" style="background:var(--card-bg);color:var(--ink);">
+    <div class="flex justify-between items-center mb-4">
+      <h3 id="info-title" class="text-xl font-extrabold"></h3>
+      <button onclick="closeInfo()" class="text-xl" style="color:var(--muted);">✕</button>
+    </div>
+    <div id="info-content" class="text-sm leading-8" style="color:var(--muted);"></div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="pt-14 pb-8" style="background:var(--ink); color:#cfc9c4;">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
+    <div>
+      <h4 class="text-white font-bold mb-1 text-lg">Elegant Touch</h4>
+      <p class="mt-2">وجهتك للإكسسوارات والمجوهرات الفاخرة بأسعار تناسبك.</p>
+    </div>
+    <div>
+      <h5 class="text-white font-semibold mb-3">تسوقي</h5>
+      <ul class="space-y-2">
+        <li><a href="#" onclick="event.preventDefault();filterCategory('bags')" class="hover:text-white">حقائب</a></li>
+        <li><a href="#" onclick="event.preventDefault();filterCategory('jewellery')" class="hover:text-white">مجوهرات</a></li>
+        <li><a href="#" onclick="event.preventDefault();filterCategory('accessories')" class="hover:text-white">إكسسوارات</a></li>
+        <li><a href="#" onclick="event.preventDefault();filterCategory('gifts')" class="hover:text-white">هدايا</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 class="text-white font-semibold mb-3">خدمة العملاء</h5>
+      <ul class="space-y-2">
+        <li><a href="https://wa.me/201557637446" target="_blank" class="hover:text-white">تواصل معنا</a></li>
+        <li><a href="#about" onclick="openInfo('shipping')" class="hover:text-white">الشحن والتوصيل</a></li>
+        <li><a href="#about" onclick="openInfo('return')" class="hover:text-white">سياسة الاستبدال</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 class="text-white font-semibold mb-3">تابعينا</h5>
+      <ul class="space-y-2">
+        <li><a href="https://www.instagram.com/elegant.touch33?stkn=MW12MXRjYnJvdXF5cA==" target="_blank" class="hover:text-white">انستجرام</a></li>
+        <li><a href="https://www.facebook.com/share/19UngUaqoQ/" target="_blank" class="hover:text-white">فيسبوك</a></li>
+        <li><a href="https://www.tiktok.com/@elegant.touch22?_r=1&_t=ZS-9A19cxnYnNI" target="_blank" class="hover:text-white">تيك توك</a></li>
+        <li><a href="https://wa.me/201557637446" target="_blank" class="hover:text-white">واتساب</a></li>
+      </ul>
+    </div>
+  </div>
+  <p class="text-center mt-10 text-xs" style="color:#8a8078;">&copy; <span id="year"></span> Elegant Touch. جميع الحقوق محفوظة.</p>
+</footer>
+
+<!-- WhatsApp Float -->
+<a href="https://wa.me/201557637446?text=مرحباً%20Elegant%20Touch،%20أحتاج%20مساعدة" target="_blank" class="whatsapp-float" aria-label="واتساب">
+  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592z"/></svg>
+  <span>WhatsApp</span>
+</a>
+
+<script src="products.js"></script>
+<script>
+window.FALLBACK_IMG = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><rect width='400' height='400' fill='#fdf1f0'/><text x='50%' y='50%' font-family='Tahoma' font-size='22' fill='#b3355a' text-anchor='middle' dy='.35em'>Elegant Touch</text></svg>`
+);
+const FALLBACK_IMG = window.FALLBACK_IMG;
+
+const SUPABASE_URL = 'https://rczlepcdiiigobmosiew.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjemxlcGNkaWlpZ29ibW9zaWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNzcyMTYsImV4cCI6MjEwNTk1MzIxNn0.5drVpdyVvC9pkZ2r8ggeB_T6Mv6U6YTumpPdHtMHibg';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function saveOrderToDatabase(order){
+  const { error } = await supabaseClient.from('orders').insert([order]);
+  if(error){ console.error('تعذر حفظ الطلب:', error); return { ok:false }; }
+  return { ok:true };
+}
+
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  localStorage.setItem('et_dark', document.body.classList.contains('dark') ? '1' : '0');
+}
+if(localStorage.getItem('et_dark') === '1') document.body.classList.add('dark');
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+let cart = JSON.parse(localStorage.getItem('et_cart') || '[]');
+let favorites = JSON.parse(localStorage.getItem('et_favorites') || '[]');
+let activeCat = 'all';
+let searchTerm = '';
+let sortMode = 'default';
+let priceFilter = 'all';
+let viewMode = localStorage.getItem('et_view') || 'grid';
+
+function toggleMenu(){ document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+function filterCategory(cat){
+  activeCat = cat;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  document.getElementById('mobile-menu').classList.add('hidden');
+  document.getElementById('products').scrollIntoView({behavior:'smooth'});
+  renderProducts();
+}
+
+function handleSearch(value){ searchTerm = value.trim().toLowerCase(); renderProducts(); }
+function setSort(value){ sortMode = value; renderProducts(); }
+function setPriceFilter(v){ priceFilter = v; renderProducts(); }
+
+function toggleView(){
+  viewMode = viewMode === 'grid' ? 'list' : 'grid';
+  localStorage.setItem('et_view', viewMode);
+  applyViewMode();
+}
+
+function applyViewMode(){
+  const grid = document.getElementById('product-grid');
+  const icon = document.getElementById('view-icon');
+  const label = document.getElementById('view-label');
+  const btn = document.getElementById('view-toggle');
+  grid.className = viewMode === 'list' ? 'products-list' : 'products-grid';
+  icon.textContent = viewMode === 'list' ? '☰' : '▦';
+  label.textContent = viewMode === 'list' ? 'قائمة' : 'شبكة';
+  btn.classList.toggle('active', viewMode === 'list');
+}
+
+function toggleFavorite(id){
+  if(favorites.includes(id)) favorites = favorites.filter(x => x !== id);
+  else favorites.push(id);
+  localStorage.setItem('et_favorites', JSON.stringify(favorites));
+  renderProducts();
+  updateFavCount();
+}
+
+function updateFavCount(){
+  const el = document.getElementById('fav-count');
+  if(favorites.length > 0){
+    el.textContent = favorites.length;
+    el.classList.remove('hidden');
+  } else el.classList.add('hidden');
+}
+
+function renderProducts(){
+  let list = activeCat === 'all' ? [...products] : products.filter(p => p.cat === activeCat);
+  if(searchTerm) list = list.filter(p => (p.name + ' ' + (p.desc || '')).toLowerCase().includes(searchTerm));
+  if(priceFilter !== 'all'){
+    const [min,max] = priceFilter.split('-').map(Number);
+    list = list.filter(p => p.price >= min && p.price <= max);
+  }
+  if(sortMode === 'low') list.sort((a,b)=>a.price-b.price);
+  if(sortMode === 'high') list.sort((a,b)=>b.price-a.price);
+  if(sortMode === 'name') list.sort((a,b)=>a.name.localeCompare(b.name,'ar'));
+
+  document.getElementById('results-count').textContent = `عرض ${list.length} من ${products.length} منتج`;
+
+  const grid = document.getElementById('product-grid');
+  if(!list.length){
+    grid.innerHTML = `<div class="empty-state"><div class="text-4xl mb-3">⌕</div><p class="font-bold text-lg">لم نجد منتجات مطابقة</p><p class="mt-1">جربي كلمة بحث أخرى أو اختاري قسمًا مختلفًا.</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(p => `
+    <div class="product-card">
+      <div class="card-img cursor-pointer" onclick="location.href='product.html?id=${p.id}'">
+        <button class="fav-btn ${favorites.includes(p.id) ? 'active' : ''}" onclick="event.stopPropagation();toggleFavorite(${p.id})" aria-label="المفضلة">
+          ${favorites.includes(p.id) ? '♥' : '♡'}
+        </button>
+        <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src=FALLBACK_IMG">
+      </div>
+      <div class="card-body">
+        <h3 class="card-name cursor-pointer" onclick="location.href='product.html?id=${p.id}'">${p.name}</h3>
+        <p class="card-price">${p.price} ج.م</p>
+        <button onclick="location.href='product.html?id=${p.id}'" class="card-btn">عرض التفاصيل</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function saveCart(){ localStorage.setItem('et_cart', JSON.stringify(cart)); }
+
+function toggleCart(){
+  const sidebar = document.getElementById('cart-sidebar');
+  const overlay = document.getElementById('cart-overlay');
+  if (sidebar.classList.contains('-translate-x-full')){
+    sidebar.classList.remove('-translate-x-full');
+    overlay.classList.remove('hidden');
+    setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+  } else {
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('opacity-0');
+    setTimeout(() => overlay.classList.add('hidden'), 300);
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('opacity-0','translate-y-2');
+  clearTimeout(window._t);
+  window._t = setTimeout(() => t.classList.add('opacity-0','translate-y-2'), 2000);
+}
+
+function changeQty(id, size, delta){
+  const item = cart.find(i => i.id === id && i.size === size);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(i => !(i.id === id && i.size === size));
+  saveCart(); updateCartUI();
+}
+
+function updateCartUI(){
+  const itemsEl = document.getElementById('cart-items');
+  const countEl = document.getElementById('cart-count');
+  const totalEl = document.getElementById('cart-total');
+  countEl.innerText = cart.reduce((s,i) => s + i.qty, 0);
+
+  if (cart.length === 0){
+    itemsEl.innerHTML = `<p class="text-center mt-10" style="color:var(--muted);">السلة فارغة حالياً</p>`;
+    totalEl.innerText = '0 ج.م';
+    return;
+  }
+  let total = 0;
+  itemsEl.innerHTML = cart.map(item => {
+    total += item.price * item.qty;
+    return `
+      <div class="flex items-center gap-3 pb-4" style="border-bottom:1px solid var(--line);">
+        <img src="${item.img}" alt="${item.name}" onerror="this.onerror=null;this.src=FALLBACK_IMG" class="w-14 h-14 object-cover rounded-lg">
+        <div class="flex-1">
+          <div class="flex items-start justify-between gap-2">
+            <h4 class="text-sm font-medium">${item.name}</h4>
+            <button onclick="removeFromCart(${item.id}, ${item.size ? `'${item.size}'` : null})" class="text-xs" style="color:var(--muted);" title="حذف">حذف</button>
+          </div>
+          ${item.size ? `<p class="text-xs" style="color:var(--muted);">المقاس: ${item.size}</p>` : ''}
+          <p class="text-sm font-bold" style="color:var(--rose);">${item.price} ج.م</p>
+          <div class="flex items-center gap-2 mt-1">
+            <button onclick="changeQty(${item.id}, ${item.size ? `'${item.size}'` : null}, -1)" class="w-6 h-6 rounded-full" style="background:var(--blush);color:var(--ink);">−</button>
+            <span class="text-sm w-4 text-center">${item.qty}</span>
+            <button onclick="changeQty(${item.id}, ${item.size ? `'${item.size}'` : null}, 1)" class="w-6 h-6 rounded-full" style="background:var(--blush);color:var(--ink);">+</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  totalEl.innerText = total + ' ج.م';
+}
+
+function removeFromCart(id, size=null){
+  cart = cart.filter(i => !(i.id === id && i.size === size));
+  saveCart(); updateCartUI();
+}
+
+function getCartTotal(){ return cart.reduce((sum,item)=>sum + item.price * item.qty, 0); }
+
+function checkoutWhatsApp(){
+  if (cart.length === 0){ showToast('السلة فارغة، أضيفي منتجًا أولاً'); return; }
+  document.getElementById('checkout-total').textContent = getCartTotal() + ' ج.م';
+  const modal = document.getElementById('checkout-modal');
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  setTimeout(()=>modal.classList.remove('opacity-0'),10);
+}
+
+function closeCheckout(){
+  const modal = document.getElementById('checkout-modal');
+  modal.classList.add('opacity-0');
+  setTimeout(()=>{modal.classList.add('hidden');modal.classList.remove('flex');},200);
+}
+
+async function sendCustomerOrder(){
+  const name = document.getElementById('customer-name').value.trim();
+  const phone = document.getElementById('customer-phone').value.trim();
+  const gov = document.getElementById('customer-governorate').value.trim();
+  const area = document.getElementById('customer-area').value.trim();
+  const address = document.getElementById('customer-address').value.trim();
+  const notes = document.getElementById('customer-notes').value.trim();
+
+  if(!name || !phone || !gov || !address){ showToast('من فضلك اكملي البيانات المطلوبة'); return; }
+  if(!/^01[0-9]{9}$/.test(phone.replace(/\s/g,''))){ showToast('اكتبي رقم هاتف مصري صحيح'); return; }
+
+  let message = `مرحباً Elegant Touch، أود تأكيد طلب جديد.\n\n`;
+  message += `بيانات العميل:\nالاسم: ${name}\nالهاتف: ${phone}\nالمحافظة: ${gov}\nالمنطقة: ${area || 'غير محددة'}\nالعنوان: ${address}\n`;
+  if(notes) message += `ملاحظات: ${notes}\n`;
+  message += `\nالمنتجات:\n`;
+  cart.forEach((item,i)=>{
+    const sizeText = item.size ? ` - المقاس: ${item.size}` : '';
+    message += `${i+1}- ${item.name}${sizeText} × ${item.qty} = ${item.price*item.qty} ج.م\n`;
+  });
+  const total = getCartTotal();
+  message += `\nإجمالي المنتجات: ${total} ج.م\nالعربون المطلوب (50%): ${total*0.5} ج.م\n\nبرجاء تأكيد الطلب وتفاصيل الشحن.`;
+
+  const orderRecord = {
+    customer_name: name, phone, governorate: gov,
+    area: area || null, address, notes: notes || null,
+    items: cart.map(i => ({ id:i.id, name:i.name, size:i.size||null, qty:i.qty, price:i.price })),
+    total, deposit: total * 0.5, status: 'جديد'
+  };
+
+  await saveOrderToDatabase(orderRecord);
+  window.open(`https://wa.me/201557637446?text=${encodeURIComponent(message)}`, '_blank');
+  cart = []; saveCart(); updateCartUI(); closeCheckout();
+}
+
+function openInfo(type){
+  const title = document.getElementById('info-title');
+  const content = document.getElementById('info-content');
+  const data = {
+    about: { title:'عن Elegant Touch', content:'<p>Elegant Touch متجر للإكسسوارات والمجوهرات والحقائب والهدايا، هدفه تقديم منتجات مختارة وتجربة طلب سهلة وسريعة.</p><p class="mt-3">يمكنك تصفح المنتجات وإضافتها للسلة ثم إرسال الطلب مباشرة عبر واتساب.</p>' },
+    shipping: { title:'الشحن والتوصيل', content:'<p>الشحن متاح لجميع محافظات مصر.</p><ul class="list-disc pr-5 mt-3"><li>تكلفة الشحن تختلف حسب المحافظة والمنطقة.</li><li>مدة التوصيل يتم تأكيدها مع العميل قبل تثبيت الطلب.</li><li>يتم طلب عربون 50% لتأكيد الطلب حسب سياسة المتجر.</li></ul>' },
+    return: { title:'سياسة الاستبدال والاسترجاع', content:'<p>في حالة وجود مشكلة في المنتج، يرجى التواصل معنا عبر واتساب قبل أي إجراء.</p><ul class="list-disc pr-5 mt-3"><li>يجب توضيح المشكلة وإرسال صور عند الطلب.</li><li>حالة قبول الاستبدال ومدة الإجراء يتم تأكيدهما مع خدمة العملاء.</li><li>يتم توضيح أي رسوم شحن مرتبطة بالاستبدال قبل التنفيذ.</li></ul>' }
+  }[type] || {};
+  title.textContent = data.title || 'معلومات';
+  content.innerHTML = data.content || '';
+  const modal=document.getElementById('info-modal');
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  setTimeout(()=>modal.classList.remove('opacity-0'),10);
+}
+
+function closeInfo(){
+  const modal=document.getElementById('info-modal');
+  modal.classList.add('opacity-0');
+  setTimeout(()=>{modal.classList.add('hidden');modal.classList.remove('flex');},200);
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeCheckout(); closeInfo(); } });
+
+applyViewMode();
+renderProducts();
+updateCartUI();
+updateFavCount();
+
+window.addEventListener('pageshow', function(e){
+  if (e.persisted) {
+    cart = JSON.parse(localStorage.getItem('et_cart') || '[]');
+    favorites = JSON.parse(localStorage.getItem('et_favorites') || '[]');
+    renderProducts();
+    updateCartUI();
+    updateFavCount();
+  }
+});
+</script>
+</body>
+</html>

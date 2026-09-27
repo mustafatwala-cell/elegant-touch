@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفاصيل المنتج | Elegant Touch</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rose:#b3355a; --rose-dark:#8f2646; --blush:#fdf1f0; --cream:#fffaf7;
+    --ink:#221f1d; --muted:#8a8078; --line:#f0e2df;
+    --card-bg:#ffffff; --text-on-card:#221f1d;
+  }
+  *{box-sizing:border-box}
+  body{font-family:'Tajawal',sans-serif;background:var(--cream);color:var(--ink);transition:background .3s,color .3s;}
+
+  /* ===== Size Buttons ===== */
+  .size-btn{
+    border:1px solid var(--line);
+    min-width:44px;
+    padding:8px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    color:var(--ink);
+    background:var(--card-bg);
+    transition:.2s;
+  }
+  .size-btn:hover{border-color:var(--rose);}
+  .size-btn.selected{background:var(--rose);color:#fff !important;border-color:var(--rose);}
+
+  /* ===== Form Inputs ===== */
+  .form-input{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:11px 13px;
+    outline:none;
+    background:var(--card-bg);
+    color:var(--ink);
+    transition:.2s;
+  }
+  .form-input:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(179,53,90,.08)}
+  .field-label{font-size:13px;font-weight:700;margin-bottom:6px;display:block;color:var(--ink);}
+
+  /* ===== Buttons ===== */
+  .btn-ink{background:var(--ink);color:#fff !important;border:none;cursor:pointer;transition:.2s;}
+  .btn-ink:hover{background:var(--rose);}
+  .btn-rose{background:var(--rose);color:#fff !important;border:none;cursor:pointer;transition:.2s;}
+  .btn-rose:hover{background:var(--rose-dark);}
+  .btn-blush{background:var(--blush);color:var(--ink) !important;border:none;cursor:pointer;transition:.2s;}
+  .btn-blush:hover{opacity:.85;}
+
+  /* ===== Quantity Buttons ===== */
+  .qty-btn{
+    width:36px;height:36px;border-radius:50%;
+    background:var(--blush);color:var(--ink) !important;
+    border:none;cursor:pointer;font-size:18px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    transition:.2s;
+  }
+  .qty-btn:hover{background:var(--rose);color:#fff !important;}
+
+  /* ===== Gallery Thumbnails ===== */
+  .gallery-thumb{
+    flex-shrink:0;width:80px;height:80px;border-radius:10px;overflow:hidden;
+    border:2px solid var(--line);cursor:pointer;background:var(--blush);
+    transition:.2s;
+  }
+  .gallery-thumb:hover{border-color:var(--rose);}
+  .gallery-thumb.active{border-color:var(--rose);}
+  .gallery-thumb img{width:100%;height:100%;object-fit:cover;}
+
+  /* ===== Info Box ===== */
+  .info-box{background:var(--blush);border-radius:14px;padding:16px;margin-top:20px;color:var(--ink);}
+  .info-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;}
+  .info-row span{color:var(--ink);}
+  .info-row strong{color:var(--ink);}
+
+  .shipping-box{
+    background:var(--blush);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    margin-top:24px;
+    color:var(--ink);
+  }
+
+  /* ===== Reviews ===== */
+  .review-card{background:var(--blush);border-radius:14px;padding:14px;color:var(--ink);}
+
+  /* ===== WhatsApp Float ===== */
+  .whatsapp-float{
+    position:fixed;bottom:20px;left:20px;z-index:55;
+    display:flex;align-items:center;gap:8px;
+    background:#25D366;color:#fff;padding:12px 20px;
+    border-radius:999px;font-weight:700;font-size:14px;
+    box-shadow:0 8px 24px rgba(37,211,102,.4);
+    text-decoration:none;transition:transform .25s;
+  }
+  .whatsapp-float:hover{transform:translateY(-3px);}
+  @media(max-width:640px){.whatsapp-float span{display:none}.whatsapp-float{padding:14px;border-radius:50%}}
+
+  /* ===== 🌙 Dark Mode - محسّن بالكامل ===== */
+  body.dark{
+    --cream:#1a1816; --ink:#f5f0ed; --blush:#2a2523; --line:#3a3330;
+    --muted:#a89f98; --card-bg:#221f1d; --text-on-card:#f5f0ed;
+    --rose:#e06b8b; --rose-dark:#c14b6f;
+  }
+  body.dark nav{background:#221f1d !important;border-color:#3a3330 !important;}
+  body.dark .bg-white{background:#221f1d !important;color:#f5f0ed;}
+  body.dark .form-input{background:#2a2523;color:#f5f0ed;border-color:#3a3330;}
+  body.dark img{filter:brightness(.92);}
+  body.dark .shipping-box{background:#2a2523 !important;border-color:#3a3330 !important;}
+  body.dark .info-box{background:#2a2523 !important;}
+  body.dark .review-card{background:#2a2523 !important;}
+  body.dark .btn-ink{background:var(--rose) !important;color:#fff !important;}
+  body.dark .btn-ink:hover{background:var(--rose-dark) !important;}
+  body.dark .qty-btn{background:#3a3330;color:#f5f0ed !important;}
+  body.dark .qty-btn:hover{background:var(--rose);color:#fff !important;}
+  body.dark .gallery-thumb{background:#2a2523;}
+  body.dark #review-form{background:#2a2523 !important;}
+  body.dark #product-content > div:last-child{background:#221f1d !important;}
+  body.dark section[style*="background:var(--card-bg)"]{background:#221f1d !important;}
+
+  /* Star rating */
+  .star-filled{color:#f5b301;}
+  .star-empty{color:#ddd;}
+  body.dark .star-empty{color:#555;}
+</style>
+</head>
+<body>
+
+<!-- Top promo bar -->
+<div class="text-center text-sm py-2 text-white" style="background:var(--rose-dark);">
+  توصيل لجميع المحافظات · اطلبي الآن مباشرة عبر واتساب
+</div>
+
+<!-- Nav -->
+<nav class="sticky top-0 z-10 border-b" style="background:var(--card-bg);border-color:var(--line);">
+  <div class="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+    <a href="index.html" class="font-bold text-sm">← رجوع للمتجر</a>
+    <a href="index.html" class="text-2xl font-extrabold" style="color:var(--rose);">Elegant Touch</a>
+    <span class="text-sm">تفاصيل المنتج</span>
+  </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-5 py-8">
+
+  <!-- Not Found -->
+  <div id="not-found" class="hidden text-center py-20">
+    <h1 class="text-2xl font-bold">المنتج غير موجود</h1>
+    <a class="inline-block mt-5 underline" href="index.html">العودة للمتجر</a>
+  </div>
+
+  <!-- Product Content -->
+  <section id="product-content" class="grid md:grid-cols-2 gap-8 lg:gap-12">
+
+    <!-- Images -->
+    <div>
+      <div class="rounded-2xl overflow-hidden" style="background:var(--card-bg);">
+        <img id="main-image" class="w-full aspect-square object-cover" alt="صورة المنتج">
+      </div>
+      <div id="gallery" class="flex gap-3 mt-3 overflow-x-auto pb-2"></div>
+    </div>
+
+    <!-- Details -->
+    <div class="rounded-2xl p-6 md:p-8" style="background:var(--card-bg);">
+      <p class="text-sm mb-3" style="color:var(--muted);">Elegant Touch / تفاصيل المنتج</p>
+      <h1 id="name" class="text-3xl font-extrabold"></h1>
+      <p id="price" class="text-2xl font-bold mt-3" style="color:var(--rose);"></p>
+      <div id="avg-rating" class="mt-2"></div>
+      <p id="desc" class="leading-8 mt-5" style="color:var(--muted);"></p>
+
+      <!-- Product Info -->
+      <div class="info-box">
+        <div class="info-row">
+          <span>الخامة</span>
+          <strong id="material"></strong>
+        </div>
+        <div class="info-row">
+          <span>الحالة</span>
+          <strong id="stock" style="color:var(--rose);"></strong>
+        </div>
+        <div id="features-wrap" class="mt-4 hidden">
+          <strong style="color:var(--ink);">المميزات</strong>
+          <ul id="features" class="list-disc pr-5 mt-2 leading-7" style="color:var(--ink);"></ul>
+        </div>
+      </div>
+
+      <!-- Sizes -->
+      <div id="sizes-wrap" class="mt-6 hidden">
+        <p class="font-bold mb-3">اختاري المقاس</p>
+        <div id="sizes" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <!-- Quantity -->
+      <div class="mt-6">
+        <p class="font-bold mb-3">الكمية</p>
+        <div class="flex items-center gap-4">
+          <button id="minus" class="qty-btn" aria-label="تقليل">−</button>
+          <span id="qty" class="font-bold text-lg">1</span>
+          <button id="plus" class="qty-btn" aria-label="زيادة">+</button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-2 gap-3 mt-7">
+        <button id="add-cart" class="btn-ink py-3 rounded-full font-bold">أضف للسلة</button>
+        <button id="buy-now" class="btn-rose py-3 rounded-full font-bold">شراء الآن</button>
+      </div>
+
+      <button id="share" class="btn-blush w-full mt-3 py-3 rounded-full font-bold">مشاركة المنتج ↗</button>
+
+      <!-- Shipping Info -->
+      <div class="shipping-box text-sm leading-7">
+        <h2 class="font-extrabold mb-2" style="color:var(--ink);">معلومات الشحن والعربون</h2>
+        <p style="color:var(--ink);">الشحن متاح لجميع محافظات مصر. تكلفة الشحن ومدة التوصيل يتم تأكيدهما حسب المحافظة والمنطقة.</p>
+        <p class="mt-2" style="color:var(--ink);">يُطلب عربون 50% لتأكيد الطلب، ويتم تأكيد التفاصيل عبر واتساب.</p>
+      </div>
+
+      <p id="notice" class="text-sm mt-4" style="color:var(--rose);" role="status"></p>
+
+      <a href="index.html" class="inline-block mt-6 underline font-bold">← رجوع للمتجر</a>
+    </div>
+  </section>
+
+  <!-- Reviews -->
+  <section class="mt-12 rounded-2xl p-6 md:p-8" style="background:var(--card-bg);">
+    <h2 class="text-xl font-extrabold mb-4">تقييمات العملاء</h2>
+    <div id="avg-rating-big" class="mb-5"></div>
+    <div id="reviews-list" class="space-y-4 mb-6"></div>
+
+    <button onclick="toggleReviewForm()" class="btn-rose w-full py-3 rounded-full font-bold mb-4">أضيفي تقييمك ⭐</button>
+
+    <div id="review-form" class="hidden p-4 rounded-xl" style="background:var(--blush);">
+      <input id="rev-name" class="form-input mb-3" placeholder="اسمك">
+      <div class="mb-3">
+        <label class="field-label">التقييم</label>
+        <div id="star-picker" class="text-3xl cursor-pointer select-none"></div>
+      </div>
+      <textarea id="rev-comment" class="form-input mb-3" rows="3" placeholder="رأيك في المنتج..."></textarea>
+      <button onclick="submitReview()" class="btn-ink w-full py-2.5 rounded-full font-bold">إرسال التقييم</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- WhatsApp Float -->
+<a href="https://wa.me/201557637446" target="_blank" class="whatsapp-float" aria-label="واتساب">
+  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592z"/></svg>
+  <span>WhatsApp</span>
+</a>
+
+<script src="products.js"></script>
+<script>
+const SUPABASE_URL = 'https://rczlepcdiiigobmosiew.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjemxlcGNkaWlpZ29ibW9zaWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNzcyMTYsImV4cCI6MjEwNTk1MzIxNn0.5drVpdyVvC9pkZ2r8ggeB_T6Mv6U6YTumpPdHtMHibg';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const FALLBACK_IMG = 'https://placehold.co/700x700/fdf1f0/b3355a?text=Elegant+Touch';
+const FALLBACK_THUMB = 'https://placehold.co/400x400/fdf1f0/b3355a?text=Elegant';
+
+const productId = new URLSearchParams(location.search).get('id');
+const product = products.find(p => String(p.id) === String(productId));
+const $ = id => document.getElementById(id);
+let qty = 1, selectedSize = null, selectedRating = 0;
+
+// Dark mode init
+if(localStorage.getItem('et_dark') === '1') document.body.classList.add('dark');
+
+if(!product){
+  $('product-content').classList.add('hidden');
+  $('not-found').classList.remove('hidden');
+} else {
+  document.title = product.name + ' | Elegant Touch';
+  $('name').textContent = product.name;
+  $('price').textContent = product.price + ' ج.م';
+  $('desc').textContent = product.desc || '';
+  $('material').textContent = product.material || 'حسب المنتج';
+  $('stock').textContent = product.stock || 'متوفر';
+
+  // Main image
+  const main = $('main-image');
+  main.src = product.img;
+  main.onerror = () => { main.onerror = null; main.src = FALLBACK_IMG; };
+
+  // Gallery
+  const imgs = product.images?.length ? product.images : [product.img];
+  $('gallery').innerHTML = imgs.map((src, i) => `
+    <button class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="setImage('${src.replace(/'/g, "\\'")}', this)">
+      <img src="${src}" onerror="this.onerror=null;this.src='${FALLBACK_THUMB}'" alt="صورة ${i + 1}">
+    </button>
+  `).join('');
+
+  // Sizes
+  if(product.sizes?.length){
+    selectedSize = product.sizes[0];
+    $('sizes-wrap').classList.remove('hidden');
+    $('sizes').innerHTML = product.sizes.map((z, i) =>
+      `<button class="size-btn ${i === 0 ? 'selected' : ''}" onclick="chooseSize(${i}, this)">${z}</button>`
+    ).join('');
+  }
+
+  // Features
+  if(product.features?.length){
+    $('features-wrap').classList.remove('hidden');
+    $('features').innerHTML = product.features.map(f => `<li>${f}</li>`).join('');
+  }
+
+  loadReviews();
+}
+
+/* ===== Gallery ===== */
+function setImage(src, btn){
+  const main = $('main-image');
+  main.src = src;
+  main.onerror = () => { main.onerror = null; main.src = FALLBACK_IMG; };
+  document.querySelectorAll('.gallery-thumb').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ===== Size Selection ===== */
+function chooseSize(i, btn){
+  selectedSize = product.sizes[i];
+  document.querySelectorAll('#sizes .size-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+/* ===== Quantity ===== */
+$('minus').onclick = () => { qty = Math.max(1, qty - 1); $('qty').textContent = qty; };
+$('plus').onclick = () => { qty++; $('qty').textContent = qty; };
+
+/* ===== Add to Cart ===== */
+function addCart(){
+  if(product.sizes?.length && !selectedSize){
+    $('notice').textContent = 'من فضلك اختاري المقاس';
+    return false;
+  }
+  let cart = JSON.parse(localStorage.getItem('et_cart') || '[]');
+  const old = cart.find(x => x.id === product.id && x.size === selectedSize);
+  if(old) old.qty += qty;
+  else cart.push({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    img: product.img,
+    size: selectedSize,
+    qty
+  });
+  localStorage.setItem('et_cart', JSON.stringify(cart));
+  $('notice').textContent = '✓ تمت إضافة المنتج إلى السلة';
+  setTimeout(() => { $('notice').textContent = ''; }, 2500);
+  return true;
+}
+$('add-cart').onclick = addCart;
+
+/* ===== Buy Now ===== */
+$('buy-now').onclick = () => {
+  if(product.sizes?.length && !selectedSize){
+    $('notice').textContent = 'من فضلك اختاري المقاس';
+    return;
+  }
+  const total = product.price * qty;
+  const text = `مرحباً Elegant Touch، أود طلب المنتج التالي:
+${product.name}
+السعر: ${product.price} ج.م
+المقاس: ${selectedSize || 'غير محدد'}
+الكمية: ${qty}
+الإجمالي: ${total} ج.م
+العربون المطلوب (50%): ${total * 0.5} ج.م
+رابط المنتج: ${location.href}
+برجاء تأكيد الطلب وتفاصيل الشحن.`;
+  window.open('https://wa.me/201557637446?text=' + encodeURIComponent(text), '_blank');
+};
+
+/* ===== Share ===== */
+$('share').onclick = async () => {
+  const data = {
+    title: product.name,
+    text: `${product.name} - ${product.price} ج.م | Elegant Touch`,
+    url: location.href
+  };
+  try {
+    if(navigator.share) await navigator.share(data);
+    else {
+      await navigator.clipboard.writeText(location.href);
+      $('notice').textContent = '✓ تم نسخ رابط المنتج';
+    }
+  } catch(e) {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      $('notice').textContent = '✓ تم نسخ رابط المنتج';
+    } catch(_) {
+      $('notice').textContent = location.href;
+    }
+  }
+  setTimeout(() => { $('notice').textContent = ''; }, 2500);
+};
+
+/* ===== Reviews ===== */
+function renderStars(n){
+  return '<span class="star-filled">' + '★'.repeat(n) + '</span>' +
+         '<span class="star-empty">' + '☆'.repeat(5 - n) + '</span>';
+}
+
+async function loadReviews(){
+  const avgEl = $('avg-rating');
+  const avgBigEl = $('avg-rating-big');
+  const listEl = $('reviews-list');
+  if(!avgEl) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('reviews')
+      .select('*')
+      .eq('product_id', product.id)
+      .order('created_at', { ascending: false });
+
+    if(error){
+      console.error(error);
+      listEl.innerHTML = '<p style="color:var(--muted);">تعذر تحميل التقييمات</p>';
+      return;
+    }
+
+    if(!data || !data.length){
+      avgEl.innerHTML = '';
+      avgBigEl.innerHTML = '<p style="color:var(--muted);font-size:14px;">كن أول من يقيّم هذا المنتج</p>';
+      listEl.innerHTML = '';
+      return;
+    }
+
+    const avg = (data.reduce((s, r) => s + r.rating, 0) / data.length).toFixed(1);
+    const starsHtml = `
+      <span style="color:#f5b301;font-size:18px;">${renderStars(Math.round(avg))}</span>
+      <strong>${avg}</strong>
+      <span style="color:var(--muted);font-size:13px;">(${data.length} تقييم)</span>
+    `;
+    avgEl.innerHTML = starsHtml;
+    avgBigEl.innerHTML = starsHtml;
+
+    listEl.innerHTML = data.map(r => `
+      <div class="review-card">
+        <div class="flex justify-between items-center mb-2">
+          <strong>${r.customer_name}</strong>
+          <span style="color:#f5b301;">${renderStars(r.rating)}</span>
+        </div>
+        ${r.comment ? `<p style="color:var(--muted);font-size:14px;">${r.comment}</p>` : ''}
+      </div>
+    `).join('');
+  } catch(e){
+    console.error(e);
+  }
+}
+
+function toggleReviewForm(){
+  $('review-form').classList.toggle('hidden');
+}
+
+/* ===== Star Picker ===== */
+const starPicker = $('star-picker');
+if(starPicker){
+  for(let i = 1; i <= 5; i++){
+    const s = document.createElement('span');
+    s.textContent = '★';
+    s.style.cursor = 'pointer';
+    s.style.color = '#ddd';
+    s.onclick = () => { selectedRating = i; updateStars(); };
+    starPicker.appendChild(s);
+  }
+}
+function updateStars(){
+  const spans = starPicker.querySelectorAll('span');
+  spans.forEach((s, i) => {
+    s.style.color = i < selectedRating ? '#f5b301' : '#ddd';
+  });
+}
+
+async function submitReview(){
+  const name = $('rev-name').value.trim();
+  const comment = $('rev-comment').value.trim();
+  if(!name){ alert('اكتبي اسمك'); return; }
+  if(!selectedRating){ alert('اختاري تقييم'); return; }
+
+  try {
+    const { error } = await supabaseClient.from('reviews').insert([{
+      product_id: product.id,
+      customer_name: name,
+      rating: selectedRating,
+      comment: comment || null
+    }]);
+    if(error){
+      alert('حدث خطأ، حاولي مرة أخرى');
+      console.error(error);
+      return;
+    }
+    $('rev-name').value = '';
+    $('rev-comment').value = '';
+    selectedRating = 0;
+    updateStars();
+    $('review-form').classList.add('hidden');
+    loadReviews();
+  } catch(e){
+    console.error(e);
+    alert('حدث خطأ');
+  }
+}
+</script>
+</body>
+</html>

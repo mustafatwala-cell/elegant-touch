@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/product/1",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Elegant Touch | إكسسوارات ومجوهرات",
+      "hasCanvas": false,
+      "bodyTextLen": 1272,
+      "bodyTextHash": "95112873c3be33ebe27308d4794486bfa07ef15e52084a7223735ea04c458751",
+      "bodyTextPrefix": "توصيل لكل محافظات مصر · اطلبي من الموقع وأكّدي على واتساب ET Ele",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/product.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Elegant Touch | إكسسوارات ومجوهرات",
+      "hasCanvas": false,
+      "bodyTextLen": 1230,
+      "bodyTextHash": "cf4d24b6b4e117614b72833f9768bb3a2ccacfd00bd90e7eed778bc521970aec",
+      "bodyTextPrefix": "توصيل لكل محافظات مصر · اطلبي من الموقع وأكّدي على واتساب ET Ele",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/product-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/product.json"
+}
