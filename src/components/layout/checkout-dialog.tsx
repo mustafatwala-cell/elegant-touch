@@ -43,12 +43,32 @@ export function CheckoutDialog() {
       return;
     }
 
-    // --- بداية الكود الجديد لإرسال الطلب لـ Supabase ---
+    // --- بداية الكود المحدث لإرسال الطلب لـ Supabase ---
     try {
       const supabaseUrl = "https://rczlepcdiiigobmosiew.supabase.co";
       const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjemxlcGNkaWlpZ29ibW9zaWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNzcyMTYsImV4cCI6MjEwNTk1MzIxNn0.5drVpdyVvC9pkZ2r8ggeB_T6Mv6U6YTumpPdHtMHibg";
 
-      await fetch(`${supabaseUrl}/rest/v1/orders`, {
+      // تنظيف وتجهيز بيانات السلة لتتوافق مع قاعدة البيانات
+      const items = cart.map((l) => ({
+        name: l.name.trim().slice(0, 200),
+        size: l.size ? l.size.trim().slice(0, 20) : null,
+        qty: Math.min(Math.max(Math.trunc(l.qty), 1), 20),
+        price: Number(l.price),
+      }));
+
+      const payload = {
+        customer_name: form.name.trim().slice(0, 100),
+        phone: phone,
+        governorate: form.gov.trim().slice(0, 50),
+        area: form.area.trim().slice(0, 100) || null,
+        address: form.address.trim().slice(0, 500),
+        notes: form.notes.trim().slice(0, 500) || null,
+        items: items,
+        items_total: total,
+        shipping_estimate: shipping ?? null,
+      };
+
+      const res = await fetch(`${supabaseUrl}/rest/v1/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,16 +76,19 @@ export function CheckoutDialog() {
           "Authorization": `Bearer ${supabaseKey}`,
           "Prefer": "return=minimal"
         },
-        body: JSON.stringify({
-          customer_name: form.name,
-          phone: phone,
-          governorate: form.gov,
-          area: form.area,
-          address: form.address
-        })
+        body: JSON.stringify(payload)
       });
+
+      // التحقق من وجود أخطاء من السيرفر (مثل رفض الـ RLS)
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error("❌ فشل الحفظ في Supabase:", res.status, body);
+        // يمكنك إيقاف فتح الواتساب هنا إذا أردت بإضافة return، لكن حالياً سيكمل لتجنب خسارة العميل
+      } else {
+        console.log("✅ تم حفظ الطلب في Supabase بنجاح!");
+      }
     } catch (error) {
-      console.error("Error saving to Supabase:", error);
+      console.error("❌ خطأ في الاتصال أثناء حفظ الطلب:", error);
     }
     // --- نهاية كود Supabase ---
 
