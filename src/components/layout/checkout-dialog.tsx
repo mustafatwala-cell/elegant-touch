@@ -47,7 +47,7 @@ export function CheckoutDialog() {
     // --- بداية الكود الجديد لإرسال الطلب لـ Supabase ---
     try {
       const supabaseUrl = "https://rczlepcdiiigobmosiew.supabase.co";
-      const supabaseKey = "sb_publishable_l3o0KRCaGp-kyKQOsHvYDA_bo7oL1Zm";
+      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjemxlcGNkaWlpZ29ibW9zaWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNzcyMTYsImV4cCI6MjEwNTk1MzIxNn0.5drVpdyVvC9pkZ2r8ggeB_T6Mv6U6YTumpPdHtMHibg";
 
       await fetch(`${supabaseUrl}/rest/v1/orders`, {
         method: "POST",
@@ -62,8 +62,6 @@ export function CheckoutDialog() {
           phone: phone,
           governorate: form.gov,
           area: form.area,
-          address: form.address
-        })
       });
     } catch (error) {
       console.error("Error saving to Supabase:", error);
