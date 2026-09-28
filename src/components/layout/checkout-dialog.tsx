@@ -2,6 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
+
 import { GOVERNORATES } from "@/lib/config";
 import { useShop } from "@/lib/store";
 import { formatPrice } from "@/lib/utils";
@@ -19,6 +20,7 @@ export function CheckoutDialog() {
   const cart = useShop((s) => s.cart);
   const clearCart = useShop((s) => s.clearCart);
   const total = cart.reduce((s, l) => s + l.price * l.qty, 0);
+
   const [form, setForm] = useState(empty);
   const shipping = GOVERNORATES.find((g) => g.name === form.gov)?.shipping;
 
@@ -30,7 +32,8 @@ export function CheckoutDialog() {
     };
   }
 
-  function submit() {
+  // حولنا الدالة لـ async عشان تقدر تبعت البيانات
+  async function submit() {
     const phone = form.phone.replace(/\s/g, "");
     if (!form.name || !phone || !form.gov || !form.address) {
       toast.error("كمّلي الاسم والموبايل والمحافظة والعنوان");
@@ -40,19 +43,50 @@ export function CheckoutDialog() {
       toast.error("اكتبي رقم موبايل مصري صحيح");
       return;
     }
+
+    // --- بداية الكود الجديد لإرسال الطلب لـ Supabase ---
+    try {
+      const supabaseUrl = "https://rczlepcdiiigobmosiew.supabase.co";
+      const supabaseKey = "sb_publishable_l3o0KRCaGp-kyKQOsHvYDA_bo7oL1Zm";
+
+      await fetch(`${supabaseUrl}/rest/v1/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": supabaseKey,
+          "Authorization": `Bearer ${supabaseKey}`,
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({
+          customer_name: form.name,
+          phone: phone,
+          governorate: form.gov,
+          area: form.area,
+          address: form.address
+        })
+      });
+    } catch (error) {
+      console.error("Error saving to Supabase:", error);
+    }
+    // --- نهاية كود Supabase ---
+
     let message = `مرحباً Elegant Touch، أود تأكيد طلب جديد.\n\n`;
     message += `الاسم: ${form.name}\nالهاتف: ${phone}\nالمحافظة: ${form.gov}\n`;
     message += `المنطقة: ${form.area || "غير محددة"}\nالعنوان: ${form.address}\n`;
     if (form.notes) message += `ملاحظات: ${form.notes}\n`;
+    
     message += `\nالمنتجات:\n`;
     cart.forEach((item, i) => {
       const size = item.size ? ` — المقاس ${item.size}` : "";
       message += `${i + 1}. ${item.name}${size} × ${item.qty} = ${item.price * item.qty} ج.م\n`;
     });
+    
     message += `\nإجمالي المنتجات: ${total} ج.م`;
     if (shipping) message += `\nتقدير الشحن: من ${shipping} ج.م`;
     message += `\n\nبرجاء تأكيد التوفر وتكلفة الشحن النهائية.`;
+
     openWhatsApp(message);
+    
     clearCart();
     setForm(empty);
     setOpen(false);
@@ -72,10 +106,14 @@ export function CheckoutDialog() {
                 {shipping ? ` · شحن تقديري ${formatPrice(shipping)}` : ""}
               </Dialog.Description>
             </div>
-            <Dialog.Close className="flex size-10 items-center justify-center rounded-full hover:bg-elevated" aria-label="إغلاق">
+            <Dialog.Close
+              className="flex size-10 items-center justify-center rounded-full hover:bg-elevated"
+              aria-label="إغلاق"
+            >
               <X className="size-4" />
             </Dialog.Close>
           </div>
+
           <div className="space-y-3">
             <div>
               <Label htmlFor="c-name">الاسم</Label>
@@ -113,9 +151,11 @@ export function CheckoutDialog() {
               <Label htmlFor="c-notes">ملاحظات</Label>
               <Textarea id="c-notes" rows={2} placeholder="مقاس إضافي، موعد مناسب..." {...field("notes")} />
             </div>
+
             <Button className="w-full" onClick={submit} disabled={cart.length === 0}>
               إرسال الطلب على واتساب
             </Button>
+
             <p className="text-xs leading-5 text-muted">
               بعد الرسالة هنتأكد معاكي من التوفر والشحن. تثبيت الطلب بيتم بالاتفاق على عربون حسب سياسة المتجر.
             </p>
