@@ -32,7 +32,6 @@ export function CheckoutDialog() {
     };
   }
 
-  // حولنا الدالة لـ async عشان تقدر تبعت البيانات
   async function submit() {
     const phone = form.phone.replace(/\s/g, "");
     if (!form.name || !phone || !form.gov || !form.address) {
@@ -62,6 +61,8 @@ export function CheckoutDialog() {
           phone: phone,
           governorate: form.gov,
           area: form.area,
+          address: form.address
+        })
       });
     } catch (error) {
       console.error("Error saving to Supabase:", error);
