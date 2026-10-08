@@ -291,7 +291,6 @@ export const products: Product[] = [
     features: ["شكل الماسي معاصر لبراندات الدهب العالمية"],
     featured: true,
   }
-]
 ];
 
 export function getProduct(id: string | number) {
