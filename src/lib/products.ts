@@ -219,9 +219,10 @@ export const products: Product[] = [
     features: ["علبة هدايا", "قطعتين متناسقين", "جاهز للتغليف"],
   },
   // المنتجات الجديدة المضافة (e.g17 إلى e.g21)
- {
+// المنتجات الجديدة المضافة (بدون أقواس)
+  {
     id: 17,
-    name: "خاتم مطلي ذهب عيار 18 (17)",
+    name: "خاتم مطلي ذهب عيار 18",
     price: 250,
     cat: "jewellery",
     img: "/products/e.g17.jpeg",
@@ -230,12 +231,12 @@ export const products: Product[] = [
     sizes: ["17", "18", "19"],
     material: "مطلي ذهب عيار 18",
     stock: "متوفر",
-    features: ["أشرطة متداخلة", "فصوص بارز تباين الألوان والملمس"],
+    features: ["أشرطة متداخلة", "فصوص بارزة تباين الألوان والملمس"],
     featured: false,
   },
   {
     id: 18,
-    name: "خاتم مطلي ذهب عيار 18 (18)",
+    name: "خاتم مطلي ذهب عيار 18",
     price: 260,
     cat: "jewellery",
     img: "/products/e.g18.jpeg",
@@ -249,7 +250,7 @@ export const products: Product[] = [
   },
   {
     id: 19,
-    name: "خاتم مطلي ذهب عيار 18 (19)",
+    name: "خاتم مطلي ذهب عيار 18",
     price: 260,
     cat: "jewellery",
     img: "/products/e.g19.jpeg",
@@ -263,12 +264,12 @@ export const products: Product[] = [
   },
   {
     id: 20,
-    name: "خاتم مطلي ذهب عيار 18 (20)",
+    name: "خاتم مطلي ذهب عيار 18",
     price: 270,
     cat: "jewellery",
     img: "/products/e.g20.jpeg",
     images: ["/products/e.g20.jpeg"],
-    desc: "تصميم مريح مع حجر مركزي qruise cut وتصميم ملكي فاخر.",
+    desc: "تصميم مريح مع حجر مركزي وتصميم ملكي فاخر.",
     sizes: ["17", "18", "19"],
     material: "مطلي ذهب عيار 18",
     stock: "متوفر",
@@ -277,7 +278,7 @@ export const products: Product[] = [
   },
   {
     id: 21,
-    name: "خاتم مطلي ذهب عيار 18 (21)",
+    name: "خاتم مطلي ذهب عيار 18",
     price: 280,
     cat: "jewellery",
     img: "/products/e.g21.jpeg",
@@ -288,7 +289,7 @@ export const products: Product[] = [
     stock: "متوفر",
     features: ["شكل الماسي"],
     featured: false,
-  },
+  }
 ];
 
 export function getProduct(id: string | number) {
