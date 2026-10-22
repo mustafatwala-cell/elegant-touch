@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart } from "lucide-react";
+import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
-import { products } from "@/lib/products";
+import { products as staticProducts, type Product } from "@/lib/products";
 import { useShop } from "@/lib/store";
+import { fetchProductsFromSupabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/favorites")({
   component: FavoritesPage,
@@ -11,7 +13,23 @@ export const Route = createFileRoute("/favorites")({
 
 function FavoritesPage() {
   const favorites = useShop((s) => s.favorites);
-  const list = products.filter((p) => favorites.includes(p.id));
+  const [allProducts, setAllProducts] = useState<Product[]>(staticProducts);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const sbProducts = await fetchProductsFromSupabase();
+      if (active && sbProducts && sbProducts.length > 0) {
+        setAllProducts(sbProducts);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const list = allProducts.filter((p) => favorites.includes(p.id));
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10">

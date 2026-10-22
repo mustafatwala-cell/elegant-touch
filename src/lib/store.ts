@@ -60,11 +60,25 @@ export const useShop = create<ShopState>()(
       setMenuOpen: (menuOpen) => set({ menuOpen }),
       setActiveCat: (activeCat) => set({ activeCat, menuOpen: false }),
       addToCart: (product, qty, size) => {
+        // التحقق من حالة المخزون
+        const isOutOfStock =
+          (product as any).stock === "غير متوفر" ||
+          (product as any).stock === "نفذت الكمية" ||
+          (product as any).stock === "out_of_stock" ||
+          (product as any).stock === 0;
+
+        if (isOutOfStock) {
+          return;
+        }
+
         const key = lineKey(product.id, size);
         const cart = [...get().cart];
         const existing = cart.find((l) => l.key === key);
-        if (existing) existing.qty += qty;
-        else
+        const MAX_PER_ITEM = 20;
+
+        if (existing) {
+          existing.qty = Math.min(existing.qty + qty, MAX_PER_ITEM);
+        } else {
           cart.push({
             key,
             productId: product.id,
@@ -72,13 +86,21 @@ export const useShop = create<ShopState>()(
             price: product.price,
             img: product.img,
             size,
-            qty,
+            qty: Math.min(Math.max(qty, 1), MAX_PER_ITEM),
           });
+        }
         set({ cart });
       },
       changeQty: (key, delta) => {
+        const MAX_PER_ITEM = 20;
         const cart = get()
-          .cart.map((l) => (l.key === key ? { ...l, qty: l.qty + delta } : l))
+          .cart.map((l) => {
+            if (l.key === key) {
+              const newQty = Math.min(l.qty + delta, MAX_PER_ITEM);
+              return { ...l, qty: newQty };
+            }
+            return l;
+          })
           .filter((l) => l.qty > 0);
         set({ cart });
       },

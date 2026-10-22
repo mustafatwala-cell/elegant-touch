@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, Minus, Plus, Share2, Star } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ProductCard } from "@/components/product/product-card";
 import { NotFound } from "@/components/not-found";
@@ -12,15 +12,69 @@ import { categoryLabel, getProduct, products, SEED_REVIEWS } from "@/lib/product
 import { useShop } from "@/lib/store";
 import { cn, formatPrice } from "@/lib/utils";
 import { openWhatsApp } from "@/lib/whatsapp";
+import { fetchReviewsFromSupabase, insertReviewToSupabase, type SupabaseReview } from "@/lib/supabase";
 
 export const Route = createFileRoute("/product/$id")({
   component: ProductPage,
   head: ({ params }) => {
     const product = getProduct(params.id);
+    if (!product) {
+      return {
+        meta: [
+          { title: "المنتج غير موجود | Elegant Touch" },
+          { name: "description", content: "عذراً، هذا المنتج غير متوفر في متجر Elegant Touch." },
+        ],
+      };
+    }
+
+    const title = `${product.name} | Elegant Touch`;
+    const description = product.desc.slice(0, 160);
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://elegant-touch.store";
+    const canonicalUrl = `${origin}/product/${product.id}`;
+    const fullImgUrl = product.img.startsWith("http") ? product.img : `${origin}${product.img}`;
+
+    const jsonLd = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      name: product.name,
+      image: [fullImgUrl],
+      description: product.desc,
+      sku: `ET-${product.id}`,
+      brand: {
+        "@type": "Brand",
+        name: "Elegant Touch",
+      },
+      offers: {
+        "@type": "Offer",
+        url: canonicalUrl,
+        priceCurrency: "EGP",
+        price: product.price,
+        availability: "https://schema.org/InStock",
+        itemCondition: "https://schema.org/NewCondition",
+      },
+    };
+
     return {
       meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: fullImgUrl },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: canonicalUrl },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:image", content: fullImgUrl },
+      ],
+      links: [
+        { rel: "canonical", href: canonicalUrl },
+      ],
+      scripts: [
         {
-          title: product ? `${product.name} | Elegant Touch` : "المنتج غير موجود | Elegant Touch",
+          type: "application/ld+json",
+          children: JSON.stringify(jsonLd),
         },
       ],
     };
@@ -35,10 +89,12 @@ function ProductPage() {
 }
 
 function ProductView({ product }: { product: NonNullable<ReturnType<typeof getProduct>> }) {
-
   const [qty, setQty] = useState(1);
   const [size, setSize] = useState(product.sizes?.[0] ?? null);
   const [activeImg, setActiveImg] = useState(product.img);
+  const [supabaseReviews, setSupabaseReviews] = useState<SupabaseReview[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
   const addToCart = useShop((s) => s.addToCart);
   const setCartOpen = useShop((s) => s.setCartOpen);
   const favorites = useShop((s) => s.favorites);
@@ -47,22 +103,91 @@ function ProductView({ product }: { product: NonNullable<ReturnType<typeof getPr
   const addReview = useShop((s) => s.addReview);
   const loved = favorites.includes(product.id);
 
+  // جلب تقييمات المنتج من Supabase عند تحميل الصفحة
+  useEffect(() => {
+    let active = true;
+    async function loadReviews() {
+      setLoadingReviews(true);
+      const data = await fetchReviewsFromSupabase(product.id);
+      if (active && data) {
+        setSupabaseReviews(data);
+      }
+      if (active) setLoadingReviews(false);
+    }
+    loadReviews();
+    return () => {
+      active = false;
+    };
+  }, [product.id]);
+
   const reviews = useMemo(() => {
     const seeds = (SEED_REVIEWS[product.id] ?? []).map((r) => ({ ...r, at: 0 }));
-    const extra = userReviews ?? [];
-    return [...extra, ...seeds];
-  }, [product.id, userReviews]);
+    const local = userReviews ?? [];
+    const fromSb = supabaseReviews.map((r) => ({
+      name: r.customer_name,
+      rating: r.rating,
+      comment: r.comment,
+      at: r.created_at ? new Date(r.created_at).getTime() : 0,
+    }));
+
+    // دمج التقييمات مع منع التكرار
+    const seen = new Set<string>();
+    const combined: Array<{ name: string; rating: number; comment: string; at: number }> = [];
+
+    for (const r of [...fromSb, ...local, ...seeds]) {
+      const key = `${r.name}::${r.comment}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        combined.push(r);
+      }
+    }
+
+    return combined;
+  }, [product.id, userReviews, supabaseReviews]);
 
   const avg =
     reviews.length === 0 ? 0 : reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
 
   const related = products.filter((p) => p.cat === product.cat && p.id !== product.id).slice(0, 4);
 
+  async function handleAddReview(name: string, rating: number, comment: string) {
+    // حفظ في الحالة المحلية أولاً لتجربة سريعة
+    addReview(product.id, { name, rating, comment });
+
+    // ثم حفظ في Supabase
+    const res = await insertReviewToSupabase({
+      product_id: product.id,
+      customer_name: name,
+      rating,
+      comment,
+    });
+
+    if (res.success) {
+      toast.success("تم نشر تقييمك بنجاح في المتجر");
+      // تحديث القائمة من Supabase
+      const latest = await fetchReviewsFromSupabase(product.id);
+      if (latest) setSupabaseReviews(latest);
+    } else {
+      toast.info("تم حفظ تقييمك محلياً في جهازك");
+    }
+  }
+
   function add(openCart = false) {
     if (product.sizes?.length && !size) {
       toast.error("اختاري المقاس");
       return;
     }
+    const isOutOfStock =
+      (product as any).stock === "غير متوفر" ||
+      (product as any).stock === "نفذت الكمية" ||
+      (product as any).stock === "out_of_stock" ||
+      (product as any).stock === 0;
+
+    if (isOutOfStock) {
+      toast.error("عذراً، هذا المنتج غير متوفر حالياً");
+      return;
+    }
+
     addToCart(product, qty, size);
     toast.success("اتضافت للسلة");
     if (openCart) setCartOpen(true);
@@ -86,6 +211,17 @@ function ProductView({ product }: { product: NonNullable<ReturnType<typeof getPr
       toast.error("اختاري المقاس");
       return;
     }
+    const isOutOfStock =
+      (product as any).stock === "غير متوفر" ||
+      (product as any).stock === "نفذت الكمية" ||
+      (product as any).stock === "out_of_stock" ||
+      (product as any).stock === 0;
+
+    if (isOutOfStock) {
+      toast.error("عذراً، هذا المنتج غير متوفر حالياً");
+      return;
+    }
+
     const total = product.price * qty;
     openWhatsApp(
       `مرحباً Elegant Touch، أود طلب:\n${product.name}\nالسعر: ${product.price} ج.م\nالمقاس: ${size ?? "غير محدد"}\nالكمية: ${qty}\nالإجمالي: ${total} ج.م\nرابط المنتج: ${window.location.href}\nبرجاء تأكيد التوفر والشحن.`,
@@ -223,7 +359,7 @@ function ProductView({ product }: { product: NonNullable<ReturnType<typeof getPr
 
       <ReviewsBlock
         reviews={reviews}
-        onSubmit={(name, rating, comment) => addReview(product.id, { name, rating, comment })}
+        onSubmit={handleAddReview}
       />
 
       {related.length ? (

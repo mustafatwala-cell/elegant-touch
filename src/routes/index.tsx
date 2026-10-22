@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, MessageCircle, ShieldCheck, Truck } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { JewelryMasonry } from "@/components/product/jewelry-masonry";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CATEGORIES, products } from "@/lib/products";
+import { CATEGORIES, products as staticProducts, type Product } from "@/lib/products";
 import { useShop } from "@/lib/store";
 import { helpWhatsAppUrl } from "@/lib/whatsapp";
+import { fetchProductsFromSupabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -16,18 +17,34 @@ function Home() {
   const setActiveCat = useShop((s) => s.setActiveCat);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"default" | "low" | "high">("default");
+  const [allProducts, setAllProducts] = useState<Product[]>(staticProducts);
 
-  const featured = products.filter((p) => p.featured);
-  const jewelry = products.filter((p) => p.cat === "jewellery");
+  // جلب المنتجات من Supabase مع البقاء على المنتجات المحلية كـ fallback آمن
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const sbProducts = await fetchProductsFromSupabase();
+      if (active && sbProducts && sbProducts.length > 0) {
+        setAllProducts(sbProducts);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const featured = allProducts.filter((p) => p.featured);
+  const jewelry = allProducts.filter((p) => p.cat === "jewellery");
 
   const list = useMemo(() => {
-    let next = activeCat === "all" ? [...products] : products.filter((p) => p.cat === activeCat);
+    let next = activeCat === "all" ? [...allProducts] : allProducts.filter((p) => p.cat === activeCat);
     const q = query.trim();
     if (q) next = next.filter((p) => `${p.name} ${p.desc}`.includes(q));
     if (sort === "low") next.sort((a, b) => a.price - b.price);
     if (sort === "high") next.sort((a, b) => b.price - a.price);
     return next;
-  }, [activeCat, query, sort]);
+  }, [allProducts, activeCat, query, sort]);
 
   return (
     <main>
@@ -176,7 +193,7 @@ function Home() {
           </select>
         </div>
         <p className="mb-4 text-center text-xs text-muted">
-          عرض {list.length} من {products.length} منتج
+          عرض {list.length} من {allProducts.length} منتج
         </p>
         {list.length === 0 ? (
           <p className="py-16 text-center text-muted">مفيش نتائج. جرّبي كلمة تانية أو قسم مختلف.</p>
